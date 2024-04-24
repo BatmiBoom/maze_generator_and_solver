@@ -1,9 +1,9 @@
 from enum import Enum
-from tkinter import Canvas
 from typing import Self
 
 from classes.helpers import Vector2
 from classes.line import Line
+from classes.window import Window
 
 
 class Walls(Enum):
@@ -16,80 +16,83 @@ class Walls(Enum):
 class Cell:
     def __init__(
         self,
-        left_top_corner: Vector2,
-        right_bottom_corner: Vector2,
-        canvas: Canvas,
-        has_walls: list[bool] = [True, True, True, True],
-        visited: bool = False,
+        win = None
     ) -> None:
-        self.has_walls = has_walls
-        self.left_top_corner = left_top_corner
-        self.left_bottom_corner = Vector2(left_top_corner.x, right_bottom_corner.y)
-        self.right_top_corner = Vector2(right_bottom_corner.x, left_top_corner.y)
-        self.right_bottom_corner = right_bottom_corner
-        self.visited = visited
-        self.canvas = canvas
+        self.has_walls = [True, True, True, True]
+        self.visited = False
+        self.left_top_corner = None
+        self.left_bottom_corner = None
+        self.right_top_corner = None 
+        self.right_bottom_corner = None
+        self._win: Window | None = win
 
     def draw(
         self,
         fill_color: str,
+        left_top_corner: Vector2,
+        right_bottom_corner: Vector2,
     ) -> None:
+        if self._win is None:
+            return
+
+        self.left_top_corner = left_top_corner
+        self.left_bottom_corner = Vector2(right_bottom_corner.row, left_top_corner.col)
+        self.right_top_corner = Vector2(left_top_corner.row, right_bottom_corner.col)
+        self.right_bottom_corner = right_bottom_corner
+
         if self.has_walls[Walls.TOP.value]:
             line = Line(self.left_top_corner, self.right_top_corner)
-            line.draw(self.canvas, fill_color)
+            self._win.draw_line(line, fill_color)
         else:
             line = Line(self.left_top_corner, self.right_top_corner)
-            line.draw(self.canvas, "white")
+            self._win.draw_line(line, "white")
 
         if self.has_walls[Walls.LEFT.value]:
             line = Line(self.left_top_corner, self.left_bottom_corner)
-            line.draw(self.canvas, fill_color)
+            self._win.draw_line(line, fill_color)
         else:
             line = Line(self.left_top_corner, self.left_bottom_corner)
-            line.draw(self.canvas, "white")
+            self._win.draw_line(line, "white")
 
         if self.has_walls[Walls.BOTTOM.value]:
             line = Line(self.left_bottom_corner, self.right_bottom_corner)
-            line.draw(self.canvas, fill_color)
+            self._win.draw_line(line, fill_color)
         else:
             line = Line(self.left_bottom_corner, self.right_bottom_corner)
-            line.draw(self.canvas, "white")
+            self._win.draw_line(line, "white")
 
         if self.has_walls[Walls.RIGHT.value]:
             line = Line(self.right_top_corner, self.right_bottom_corner)
-            line.draw(self.canvas, fill_color)
+            self._win.draw_line(line, fill_color)
         else:
             line = Line(self.right_top_corner, self.right_bottom_corner)
-            line.draw(self.canvas, "white")
+            self._win.draw_line(line, "white")
 
-    def draw_move(self, to_cell: Self, undo=False) -> None:
-        fill_color = "red" if not undo else "gray"
+    def draw_move(self, to_cell: Self, fill_color: str, undo=False) -> None:
 
-        x_mid = (self.left_top_corner.x + self.right_bottom_corner.x) / 2
-        y_mid = (self.left_top_corner.y + self.right_bottom_corner.y) / 2
+        if self._win is None:
+            print("No Win")
+            return
 
-        to_x_mid = (to_cell.left_top_corner.x + to_cell.right_bottom_corner.x) / 2
-        to_y_mid = (to_cell.left_top_corner.y + to_cell.right_bottom_corner.y) / 2
+        if self.left_top_corner is None or self.right_bottom_corner is None:
+            print("No TOP CORNER")
+            return
 
-        line = Line(Vector2(x_mid, y_mid), Vector2(to_x_mid, to_y_mid))
-        line.draw(self.canvas, fill_color)
+        if to_cell.left_top_corner is None or to_cell.right_bottom_corner is None:
+            print("No BOTTOM CORNER")
+            return
 
-    def remove_wall(
-        self,
-        top: bool | None = None,
-        left: bool | None = None,
-        bottom: bool | None = None,
-        right: bool | None = None,
-    ) -> None:
-        if top is not None:
-            self.has_walls[Walls.TOP.value] = top
+        row_mid = (self.left_top_corner.row + self.right_bottom_corner.row) // 2
+        col_mid = (self.left_top_corner.col + self.right_bottom_corner.col) // 2
 
-        if left is not None:
-            self.has_walls[Walls.LEFT.value] = left
+        to_row_mid = (to_cell.left_top_corner.row + to_cell.right_bottom_corner.row) // 2
+        to_col_mid = (to_cell.left_top_corner.col + to_cell.right_bottom_corner.col) // 2
 
-        if bottom is not None:
-            self.has_walls[Walls.BOTTOM.value] = bottom
+        if undo: 
+            fill_color = "gray"
 
-        if right is not None:
-            self.has_walls[Walls.RIGHT.value] = right
+        line = Line(Vector2(row_mid, col_mid), Vector2(to_row_mid, to_col_mid))
+        self._win.draw_line(line, fill_color)
 
+    def __str__(self):
+        return f"LBC {self.left_bottom_corner} LTC {self.left_top_corner} RBC {self.right_bottom_corner} RTC {self.right_top_corner} HW {self.has_walls}"

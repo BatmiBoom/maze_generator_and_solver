@@ -1,6 +1,8 @@
 from tkinter import Canvas
 from tkinter import Tk
 
+from classes.line import Line
+
 
 class Window:
     def __init__(self, width, height) -> None:
@@ -26,3 +28,5 @@ class Window:
     def close(self) -> None:
         self.running = False
 
+    def draw_line(self, line: Line, fill_color: str) -> None:
+        line.draw(self.canvas, fill_color)

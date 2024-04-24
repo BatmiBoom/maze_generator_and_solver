@@ -11,12 +11,11 @@ class Line:
 
     def draw(self, canvas: Canvas, fill_color: str) -> None:
         canvas.create_line(
-            self.point_1.x,
-            self.point_1.y,
-            self.point_2.x,
-            self.point_2.y,
+            self.point_1.col,
+            self.point_1.row,
+            self.point_2.col,
+            self.point_2.row,
             fill=fill_color,
             width=self.width,
         )
         canvas.pack()
-
